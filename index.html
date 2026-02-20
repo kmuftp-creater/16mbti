@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MBTI 人格測驗 - 過年版 | CNY MBTI Quiz</title>
+    <title>MBTI 人格測驗 - 過年版</title>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -43,12 +43,12 @@
             return {
                 screen: 'start', // start, quiz, result
                 currentIndex: 0,
-                showTutorial: true,
                 answers: [], // 紀錄選擇 A(左) 或 B(右)
                 resultType: 'INTJ', // 預設結果
                 
                 // 滑動物理狀態
                 isDragging: false,
+                hasDragged: false, // 判斷是否為滑動，以區分純點擊
                 startX: 0,
                 startY: 0,
                 dragX: 0,
@@ -58,26 +58,30 @@
                 leaveY: 0,
 
                 questions: [
-                    // E/I
-                    { q: '過年到親戚家，一進門你會...', a: '主動跟每個人打招呼，熱情聊天', b: '安靜點頭微笑，等別人來跟你說話', dim: 'EI' },
-                    { q: '長輩們在客廳聊天時，你通常...', a: '加入話題，分享自己的故事', b: '在旁邊聽，偶爾回應幾句', dim: 'EI' },
-                    { q: '過年聚會結束後，你的感覺是...', a: '很開心，覺得充滿能量', b: '有點累，需要獨處充電', dim: 'EI' },
-                    { q: '親戚提議玩桌遊或唱 KTV，你會...', a: '興奮地第一個舉手參加', b: '婉轉推辭，或找安靜角落待著', dim: 'EI' },
-                    // S/N
-                    { q: '長輩問你今年的計畫，你會...', a: '說具體目標：考證照、存多少錢', b: '說大方向：探索新領域、追求夢想', dim: 'SN' },
-                    { q: '吃年夜飯時，你最注意的是...', a: '菜色的味道、擺盤、誰做的', b: '這頓飯的氛圍、象徵意義、傳統', dim: 'SN' },
-                    { q: '聽親戚說故事時，你會...', a: '關注細節：時間、地點、誰在場', b: '思考背後的意義和可能的發展', dim: 'SN' },
-                    { q: '收到紅包時，你想到的是...', a: '金額多少、要存起來還是花掉', b: '長輩的心意、這份祝福的意義', dim: 'SN' },
-                    // T/F
-                    { q: '親戚小孩吵架，你會...', a: '分析誰對誰錯，講道理給他們聽', b: '安撫雙方情緒，讓大家和好', dim: 'TF' },
-                    { q: '長輩抱怨身體不舒服，你會...', a: '建議看醫生、做檢查、調整作息', b: '關心他的感受，陪伴傾聽', dim: 'TF' },
-                    { q: '做決定時（例如要去哪玩），你傾向...', a: '比較優缺點，選最合理的', b: '考慮大家感受，選多數人開心的', dim: 'TF' },
-                    { q: '親戚批評你時，你的反應是...', a: '想：有道理嗎？我該改進嗎？', b: '想：他為什麼這樣說？我做錯了什麼？', dim: 'TF' },
-                    // J/P
-                    { q: '過年拜訪行程，你喜歡...', a: '事先規劃好：幾點到、待多久', b: '隨興安排：看當下心情決定', dim: 'JP' },
-                    { q: '準備過年禮物時，你會...', a: '早早列清單買好，檢查沒遺漏', b: '接近過年才開始，邊想邊買', dim: 'JP' },
-                    { q: '親戚提議臨時改行程，你會...', a: '有點不習慣，希望照原計畫', b: '覺得沒關係，反正有彈性', dim: 'JP' },
-                    { q: '整理過年收到的東西，你會...', a: '當天分類收好，放到固定位置', b: '先放著，之後有空再慢慢整理', dim: 'JP' }
+                    // 按照過年時間軸排列 (過年前準備 -> 除夕夜 -> 紅包 -> 走春拜訪 -> 假期結束)
+                    { q: '過年前要準備送給親朋好友的伴手禮，你會...', a: '提早幾個禮拜就列好清單、比價並預購完畢', b: '拖到最後幾天，逛街看到什麼不錯就直接買', dim: 'JP' },
+                    { q: '準備過年要買春聯或家裡裝飾時，你會...', a: '挑選傳統寫著「招財進寶」、「春」的實用基本款', b: '尋找有設計感、帶有特殊寓意或創意的文創春聯', dim: 'SN' },
+                    { q: '除夕回到老家，一推開門看到滿屋子親戚，你會...', a: '開心大聲打招呼，馬上融入大家聊起來', b: '微笑點頭致意，然後默默找個安靜的角落坐下', dim: 'EI' },
+                    { q: '幫忙準備年夜飯時，突然發現少買了一樣重要食材，你會...', a: '迅速思考替代方案，或馬上計算去哪間超市買最快', b: '擔心負責買菜的人自責，先安慰對方說「沒關係啦」', dim: 'TF' },
+                    { q: '看著滿桌豐盛的年菜，你腦海裡首先浮現的是...', a: '菜色真豐富，那道佛跳牆好香，烏魚子烤得剛剛好', b: '這頓飯代表著一家團圓的意義，充滿回憶與溫馨感', dim: 'SN' },
+                    
+                    { q: '吃年夜飯時，長輩們在熱烈討論家族往事，你通常...', a: '積極插話，順便分享自己最近遇到的趣事', b: '邊吃邊聽，偶爾點頭附和幾句，不常主動發言', dim: 'EI' },
+                    { q: '吃完年夜飯，表哥提議大家來打麻將或玩撲克牌，你會...', a: '馬上湊過去喊「加我一個！」，享受熱鬧的氣氛', b: '說自己不太會打或有點累，寧願在旁邊滑手機休息', dim: 'EI' },
+                    { q: '飯後長輩在客廳抱怨最近身體老是痠痛，你會...', a: '認真建議他去哪間醫院檢查，或推薦好用的痠痛貼布', b: '語帶關心地說「辛苦了」，多陪他聊聊生活瑣事', dim: 'TF' },
+                    { q: '長輩問起你新的一年有什麼計畫，你傾向回答...', a: '具體務實的目標，例如準備考公職、多存點錢買 0050', b: '比較大方向的願景，例如換個跑道試試、尋找生活新鮮感', dim: 'SN' },
+                    { q: '從長輩手中接過紅包時，你心裡想的是...', a: '捏一捏感覺今年這包有點厚，盤算著可以拿來買什麼', b: '這是長輩的心意與祝福，覺得有家人關心真的很溫暖', dim: 'SN' },
+                    
+                    { q: '拿到一堆過年禮盒跟伴手禮，你會怎麼處理...', a: '當天就拆開分類好，整齊收進固定的零食櫃子裡', b: '先全部堆在客廳角落，等之後有空或想吃時再慢慢弄', dim: 'JP' },
+                    { q: '過年期間親戚家的小孩為了搶電視或玩具吵起來了，你會...', a: '了解事情經過，客觀指出誰對誰錯並跟他們講道理', b: '先安撫兩邊的情緒，拿零食轉移他們的注意力讓大家和好', dim: 'TF' },
+                    { q: '遇到愛比較的親戚對你的薪水或感情狀況瘋狂拷問，你的反應是...', a: '覺得這只是資訊交換，面無表情地給出簡短的官方標準答案', b: '覺得個人隱私被侵犯，心裡有點受傷或不舒服但努力保持微笑', dim: 'TF' },
+                    { q: '初一去大廟拜拜或逛老街，人潮非常擁擠，你的感覺是...', a: '過年就是要這樣人擠人才有氣氛，覺得很熱鬧好玩', b: '覺得人太多空氣很悶、好煩躁，只想趕快拜完回家', dim: 'EI' },
+                    { q: '全家要決定大年初三要去哪裡走春，你的決策方式是...', a: '理性分析各景點的車程、塞車機率和花費來決定', b: '優先考慮大家的喜好，選一個能讓多數人都開心的地方', dim: 'TF' },
+                    
+                    { q: '對於過年期間出門拜訪親戚的行程，你的習慣是...', a: '事先排好精確的時間表：幾點出發、到哪家、待多久', b: '隨性發揮：看當天大家起床的時間和心情決定去哪', dim: 'JP' },
+                    { q: '原本說好要去拜訪的親戚臨時不在家，你會...', a: '覺得原本的計畫被打亂，心裡有點焦慮或不適應', b: '覺得沒差，剛好空出時間可以去別的地方晃晃吃東西', dim: 'JP' },
+                    { q: '看到電視上在播明年的生肖運勢或流年風水，你會...', a: '聽聽就好，還是覺得腳踏實地靠自己的努力比較實在', b: '覺得滿有趣的，會不自覺聯想到自己明年可能發生的各種事', dim: 'SN' },
+                    { q: '連續幾天走春拜年結束後，你的狀態是...', a: '意猶未盡，覺得充滿歡樂能量，還想再約朋友出去', b: '社交電量徹底耗盡，只想把自己關在房間安靜耍廢', dim: 'EI' },
+                    { q: '整體來說，過年這段長假，你比較偏好哪種度假模式？', a: '每天都有安排好的行程或代辦事項，過得很充實', b: '完全沒有任何固定行程，每天睡到自然醒再說', dim: 'JP' }
                 ],
 
                 mbtiData: {
@@ -132,10 +136,28 @@
                     return 'display: none;';
                 },
 
+                // 點擊左右兩側選題
+                handleClick(e) {
+                    // 如果正在動畫中，或者剛剛觸發的是滑動而非點擊，則忽略此事件
+                    if (this.isAnimatingOut || this.hasDragged) return;
+                    
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const clientX = e.clientX; 
+                    const clickX = clientX - rect.left;
+                    
+                    // 判斷點擊在左半邊或右半邊
+                    if (clickX < rect.width / 2) {
+                        this.triggerSwipe('left');
+                    } else {
+                        this.triggerSwipe('right');
+                    }
+                },
+
                 // 拖曳邏輯
                 startDrag(e) {
                     if (this.isAnimatingOut) return;
                     this.isDragging = true;
+                    this.hasDragged = false;
                     this.startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                     this.startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
                 },
@@ -148,6 +170,11 @@
                     
                     this.dragX = currentX - this.startX;
                     this.dragY = currentY - this.startY;
+
+                    // 如果有位移，標記為已滑動 (防止與純點擊衝突)
+                    if (Math.abs(this.dragX) > 5 || Math.abs(this.dragY) > 5) {
+                        this.hasDragged = true;
+                    }
 
                     // 防止手機端拖曳卡片時頁面滾動
                     if (e.type.includes('touch') && Math.abs(this.dragX) > Math.abs(this.dragY)) {
@@ -172,12 +199,6 @@
                     }
                 },
 
-                // 按鈕點擊或滑動觸發
-                handleAction(direction) {
-                    if (this.isAnimatingOut) return;
-                    this.triggerSwipe(direction);
-                },
-
                 triggerSwipe(direction) {
                     this.isAnimatingOut = true;
                     this.leaveX = direction === 'left' ? -window.innerWidth : window.innerWidth;
@@ -198,7 +219,7 @@
                     this.leaveX = 0;
                     this.leaveY = 0;
                     
-                    if (this.currentIndex < 15) {
+                    if (this.currentIndex < 19) {
                         this.currentIndex++;
                     } else {
                         this.calculateResult();
@@ -282,7 +303,6 @@
                     this.currentIndex = 0;
                     this.answers = [];
                     this.screen = 'start';
-                    this.showTutorial = true;
                     window.scrollTo(0,0);
                 }
             }
@@ -396,9 +416,8 @@
                 <h2 class="text-2xl font-bold text-cny-darkgold mb-6">🏮 過年限定版 🏮</h2>
                 
                 <p class="text-gray-600 mb-8 leading-relaxed">
-                    過年期間，你會是什麼樣的人？<br>
-                    透過 <b class="text-cny-red">16 個情境問題</b>，<br>
-                    發掘你的專屬新年人格！
+                    透過 <b class="text-cny-red">20 個情境題</b>，<br>
+                    來發掘一下你的專屬新年人格吧！
                 </p>
 
                 <button @click="startQuiz()" 
@@ -415,12 +434,12 @@
             <!-- 頂部進度條 -->
             <div class="mb-8 mt-4">
                 <div class="flex justify-between items-end mb-2">
-                    <span class="text-sm font-bold text-gray-500">問題 <span class="text-cny-red text-lg" x-text="currentIndex + 1"></span> / 16</span>
-                    <span class="text-sm font-bold text-cny-darkgold" x-text="Math.round(((currentIndex) / 16) * 100) + '%'"></span>
+                    <span class="text-sm font-bold text-gray-500">問題 <span class="text-cny-red text-lg" x-text="currentIndex + 1"></span> / 20</span>
+                    <span class="text-sm font-bold text-cny-darkgold" x-text="Math.round(((currentIndex) / 20) * 100) + '%'"></span>
                 </div>
                 <div class="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
                     <div class="h-full bg-gradient-to-r from-cny-gold to-cny-red transition-all duration-500 ease-out"
-                         :style="`width: ${((currentIndex) / 16) * 100}%`"></div>
+                         :style="`width: ${((currentIndex) / 20) * 100}%`"></div>
                 </div>
             </div>
 
@@ -429,11 +448,12 @@
                 <template x-for="(q, index) in questions" :key="index">
                     <!-- 只渲染當前卡片和下一張卡片以提升效能 -->
                     <div x-show="index === currentIndex || index === currentIndex + 1"
-                         class="swipe-card p-6 flex flex-col"
+                         class="swipe-card p-6 flex flex-col cursor-pointer"
                          :class="{ 'z-20': index === currentIndex, 'z-10': index === currentIndex + 1 }"
                          :style="getCardStyle(index)"
                          @mousedown="index === currentIndex && startDrag($event)"
-                         @touchstart="index === currentIndex && startDrag($event)">
+                         @touchstart="index === currentIndex && startDrag($event)"
+                         @click="index === currentIndex && handleClick($event)">
                         
                         <!-- 卡片內部 -->
                         <div class="flex-1 flex flex-col justify-center relative pointer-events-none">
@@ -448,8 +468,8 @@
                             </div>
 
                             <div class="text-center mb-8">
-                                <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                                    <i class="ri-question-mark"></i>
+                                <div class="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm border border-red-100">
+                                    🧧
                                 </div>
                                 <h3 class="text-2xl font-bold text-gray-800 leading-snug" x-text="q.q"></h3>
                             </div>
@@ -471,38 +491,13 @@
             </div>
 
             <!-- 底部操作區 -->
-            <div class="mt-8 flex justify-center items-center gap-8 mb-4">
-                <button @click="handleAction('left')" class="option-badge w-16 h-16 rounded-full bg-white border-4 border-cny-red text-cny-red flex items-center justify-center shadow-lg hover:bg-red-50">
-                    <i class="ri-close-line text-3xl"></i>
-                </button>
-                <button @click="prevQuestion()" x-show="currentIndex > 0" class="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors">
-                    <i class="ri-arrow-go-back-line"></i>
-                </button>
-                <button @click="handleAction('right')" class="option-badge w-16 h-16 rounded-full bg-white border-4 border-green-500 text-green-500 flex items-center justify-center shadow-lg hover:bg-green-50">
-                    <i class="ri-check-line text-3xl"></i>
+            <div class="mt-4 flex flex-col items-center justify-center gap-3 mb-4 min-h-[40px]">
+                <button @click="prevQuestion()" x-show="currentIndex > 0" x-transition.opacity class="text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-2 px-4 py-2 rounded-full hover:bg-gray-200/50 font-bold text-sm">
+                    <i class="ri-arrow-go-back-line text-lg"></i> 返回上一題
                 </button>
             </div>
-            <p class="text-center text-gray-400 text-xs mb-4">向左/右滑動卡片，或點擊按鈕選擇</p>
+            <p class="text-center text-gray-400 text-xs mb-4">向左/右滑動，或直接點選卡片左/右側選題</p>
 
-            <!-- 操作教學 Overlay (僅第一題顯示) -->
-            <div x-show="currentIndex === 0 && showTutorial" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" @click="showTutorial = false">
-                <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative">
-                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-cny-gold text-white rounded-full flex items-center justify-center text-2xl border-4 border-white">💡</div>
-                    <h3 class="text-xl font-bold mt-4 mb-6 text-gray-800">如何操作？</h3>
-                    <div class="flex justify-between items-center mb-8 px-4">
-                        <div class="text-center">
-                            <i class="ri-arrow-left-circle-fill text-4xl text-cny-red mb-2 block"></i>
-                            <span class="text-sm font-bold">向左滑<br>選擇 A</span>
-                        </div>
-                        <i class="ri-exchange-line text-3xl text-gray-300"></i>
-                        <div class="text-center">
-                            <i class="ri-arrow-right-circle-fill text-4xl text-green-500 mb-2 block"></i>
-                            <span class="text-sm font-bold">向右滑<br>選擇 B</span>
-                        </div>
-                    </div>
-                    <button class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold">我知道了</button>
-                </div>
-            </div>
         </div>
 
         <!-- ================= 結果畫面 ================= -->
@@ -542,6 +537,7 @@
         <!-- 頁尾 -->
         <footer class="mt-auto pt-8 text-center text-xs text-gray-400 relative z-10 pb-4">
             <p>僅供娛樂參考，祝您新年快樂！🧧</p>
+            <p class="mt-2 text-gray-500">v0.1.4 &copy; 2026 <a href="https://huobest.com/" target="_blank" class="text-cny-red font-medium hover:underline">霍家私塾</a></p>
         </footer>
 
     </main>
